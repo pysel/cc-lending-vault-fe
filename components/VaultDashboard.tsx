@@ -7,7 +7,6 @@ import { useMultiVaultData } from '@/lib/hooks/useMultiVaultData';
 import { useWithdraw } from '@/lib/hooks/useWithdraw';
 import { usePredictedAddress } from '@/lib/contexts/PredictedAddressContext';
 import { TokenVaultCard } from './TokenVaultCard';
-import { UserPosition } from './vault/UserPosition';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';

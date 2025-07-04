@@ -146,7 +146,7 @@ export const Vaults = () => {
           {allVaults.map(vault => (
             <Card
               key={vault.tokenId}
-              className="shadow-lg border-0 bg-gradient-to-r from-background to-muted/10 hover:shadow-xl transition-shadow duration-200"
+              className="shadow-lg border-1 bg-gradient-to-r from-background to-muted/10 hover:shadow-xl transition-shadow duration-200 py-0"
             >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">

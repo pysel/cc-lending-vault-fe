@@ -51,7 +51,15 @@ export const useWithdraw = () => {
       setState(prev => ({ ...prev, loading: true, error: null, success: false }));
 
       try {
-        // Define the withdraw function ABI
+        // Log withdrawal details for debugging
+        console.log('🔄 Starting withdrawal with shares-based approach:', {
+          vaultAddress: request.vaultAddress,
+          userShares: request.userShares.toString(),
+          userAddress: request.userAddress,
+          tokenAddress: request.tokenAddress,
+        });
+
+        // Define the withdraw function ABI - uses shares instead of amount to prevent leftovers
         const withdrawAbi = parseAbi(['function withdraw(address user, uint256 shares)']);
 
         // Encode the withdraw function call data
@@ -87,13 +95,13 @@ export const useWithdraw = () => {
           ],
         };
 
-        console.log('Withdraw prepareRequest:', prepareRequest);
+        console.log('📋 Withdraw prepareRequest:', prepareRequest);
 
         const preparedQuote = await quoteClient.prepareCallQuote(prepareRequest);
-        console.log('Withdraw preparedQuote:', preparedQuote);
+        console.log('📋 Withdraw preparedQuote:', preparedQuote);
 
         if (!preparedQuote.chainOperation) {
-          console.error('Missing chainOperation in response:', preparedQuote);
+          console.error('❌ Missing chainOperation in response:', preparedQuote);
           throw new Error('Invalid response: missing chainOperation');
         }
 
@@ -102,11 +110,11 @@ export const useWithdraw = () => {
         const signedChainOp = await signWithEmbeddedWallet(preparedQuote.chainOperation)();
 
         const tokenAggregatedAssetId = findAggregatedAssetIdByArbitrumAddress(request.tokenAddress);
-        console.log(
-          'Withdraw tokenAggregatedAssetId:',
-          request.tokenAddress,
-          tokenAggregatedAssetId
-        );
+        console.log('🔗 Withdraw tokenAggregatedAssetId:', {
+          tokenAddress: request.tokenAddress,
+          aggregatedAssetId: tokenAggregatedAssetId,
+        });
+
         // Step 2: Create the call request with signed operation
         const callRequest: CallRequest = {
           fromAggregatedAssetId: tokenAggregatedAssetId || '',
@@ -115,11 +123,11 @@ export const useWithdraw = () => {
           chainOperation: signedChainOp,
         };
 
-        console.log('Withdraw callRequest:', callRequest);
+        console.log('📋 Withdraw callRequest:', callRequest);
 
         // Step 3: Fetch the call quote
         const quote = await quoteClient.fetchCallQuote(callRequest);
-        console.log('Withdraw quote:', quote);
+        console.log('📋 Withdraw quote:', quote);
 
         // Check if quote is valid
         if (!quote.id || !quote.account || !quote.originChainsOperations) {
@@ -141,9 +149,14 @@ export const useWithdraw = () => {
           throw new Error(executeResult.error || 'Withdraw execution failed');
         }
 
+        console.log('✅ Withdrawal successful - all shares withdrawn:', {
+          sharesWithdrawn: request.userShares.toString(),
+          quoteId: quote.id,
+        });
+
         setState(prev => ({ ...prev, loading: false, success: true }));
       } catch (err) {
-        console.error('Execute withdraw error:', err);
+        console.error('❌ Execute withdraw error:', err);
         setState(prev => ({
           ...prev,
           error: err instanceof Error ? err.message : 'Failed to execute withdrawal',

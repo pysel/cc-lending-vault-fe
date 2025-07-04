@@ -3,24 +3,7 @@ import { usePrivy } from '@privy-io/react-auth';
 import { parseAbi, createPublicClient, http } from 'viem';
 import { arbitrum } from 'viem/chains';
 import { TOKEN_TO_VAULT_MAP, findTokenByAggregatedAssetId } from '@/lib/constants';
-import { VaultData } from './useVaultData';
-
-// Vault contract ABI for the methods we need
-const vaultAbi = parseAbi([
-  'function getCurrentATokenBalance() view returns (uint256)',
-  'function getSharePrice() view returns (uint256)',
-  'function getTotalYieldEarned() view returns (uint256)',
-  'function getUserWithdrawableAmount(address user) view returns (uint256)',
-  'function getUserShares(address user) view returns (uint256)',
-  'function getUserYieldAmount(address user) view returns (uint256)',
-  'function totalShares() view returns (uint256)',
-  'function totalDeposits() view returns (uint256)',
-  'function currentAllocation() view returns (string)',
-  'function currentAPY() view returns (uint256)',
-  'function bot() view returns (address)',
-  'function token() view returns (address)',
-  'function aToken() view returns (address)',
-]);
+import { VaultData, vaultAbi } from './useVaultData';
 
 export interface MultiVaultDataState {
   vaultsWithPositions: VaultData[];
@@ -113,30 +96,38 @@ export const useMultiVaultData = (userAddress?: string | null) => {
           let userShares: bigint = 0n;
           let userWithdrawableAmount: bigint = 0n;
           let userYieldAmount: bigint = 0n;
+          let userDepositAmount: bigint = 0n;
 
           // Fetch user-specific data if user address is provided
           if (userAddress && authenticated) {
             try {
-              [userShares, userWithdrawableAmount, userYieldAmount] = await Promise.all([
-                client.readContract({
-                  address: vaultAddress as `0x${string}`,
-                  abi: vaultAbi,
-                  functionName: 'getUserShares',
-                  args: [userAddress as `0x${string}`],
-                }),
-                client.readContract({
-                  address: vaultAddress as `0x${string}`,
-                  abi: vaultAbi,
-                  functionName: 'getUserWithdrawableAmount',
-                  args: [userAddress as `0x${string}`],
-                }),
-                client.readContract({
-                  address: vaultAddress as `0x${string}`,
-                  abi: vaultAbi,
-                  functionName: 'getUserYieldAmount',
-                  args: [userAddress as `0x${string}`],
-                }),
-              ]);
+              [userShares, userWithdrawableAmount, userYieldAmount, userDepositAmount] =
+                await Promise.all([
+                  client.readContract({
+                    address: vaultAddress as `0x${string}`,
+                    abi: vaultAbi,
+                    functionName: 'getUserShares',
+                    args: [userAddress as `0x${string}`],
+                  }),
+                  client.readContract({
+                    address: vaultAddress as `0x${string}`,
+                    abi: vaultAbi,
+                    functionName: 'getUserWithdrawableAmount',
+                    args: [userAddress as `0x${string}`],
+                  }),
+                  client.readContract({
+                    address: vaultAddress as `0x${string}`,
+                    abi: vaultAbi,
+                    functionName: 'getUserYieldAmount',
+                    args: [userAddress as `0x${string}`],
+                  }),
+                  client.readContract({
+                    address: vaultAddress as `0x${string}`,
+                    abi: vaultAbi,
+                    functionName: 'getUserDepositAmount',
+                    args: [userAddress as `0x${string}`],
+                  }),
+                ]);
             } catch (userError) {
               console.warn(`Failed to fetch user data for ${tokenId}:`, userError);
               // Continue with zero values
@@ -160,6 +151,7 @@ export const useMultiVaultData = (userAddress?: string | null) => {
             userShares,
             userWithdrawableAmount,
             userYieldAmount,
+            userDepositAmount,
             hasUserPosition: userShares > 0n,
           };
 
