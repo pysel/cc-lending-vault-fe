@@ -285,7 +285,7 @@ export const DepositDisplay = () => {
             Deposit to Vault
           </CardTitle>
           <p className="text-muted-foreground text-sm">
-            Deposit tokens to earn yield across multiple chains
+            Deposit tokens to earn yield on the best APY lending pools
           </p>
         </CardHeader>
 

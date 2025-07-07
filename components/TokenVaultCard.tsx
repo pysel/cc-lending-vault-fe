@@ -32,7 +32,7 @@ export const TokenVaultCard = ({
         <UserPosition vaultData={vaultData} authenticated={authenticated} variant="card" />
 
         {/* Vault Metrics */}
-        <VaultMetrics vaultData={vaultData} />
+        {/* <VaultMetrics vaultData={vaultData} /> */}
 
         {/* View Details Button */}
         {onViewDetails && vaultData.tokenId && (

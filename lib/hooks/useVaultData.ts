@@ -1,6 +1,7 @@
 // Vault Data Hook - Consolidated VaultData type
 // This hook fetches vault data from bot APIs with a single unified VaultData interface
 // Updated: Added safe conversion of percentage strings to basis points for currentAPY
+// Updated: Fixed user address handling and added proper state reset to prevent stale data
 
 import { useState, useEffect, useCallback } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
@@ -26,7 +27,32 @@ export const useVaultData = (userAddress?: string, tokenId: string = 'ob:usdc') 
     botHealthy: true,
   });
 
+  // Clear user data when authentication state changes
+  useEffect(() => {
+    if (!authenticated && state.data) {
+      setState(prev => ({
+        ...prev,
+        data: prev.data
+          ? {
+              ...prev.data,
+              userWithdrawableAmount: undefined,
+              userYieldAmount: undefined,
+              userDepositAmount: undefined,
+              userShares: undefined,
+              percentageOfVault: undefined,
+              hasUserPosition: false,
+            }
+          : null,
+      }));
+    }
+  }, [authenticated, state.data]);
+
   const fetchBotVaultData = useCallback(async () => {
+    // Don't fetch if we're waiting for user address to be resolved
+    if (authenticated && userAddress === undefined) {
+      return;
+    }
+
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
@@ -41,13 +67,13 @@ export const useVaultData = (userAddress?: string, tokenId: string = 'ob:usdc') 
 
       let userInfo: BotUserInfo | null = null;
 
-      // Fetch user-specific data if user address is provided
+      // Fetch user-specific data if user address is provided and authenticated
       if (userAddress && authenticated) {
         try {
           userInfo = await botApi.getUserInfo(userAddress, tokenId);
         } catch (userError) {
           console.warn('Failed to fetch user-specific bot data:', userError);
-          // Continue without user data
+          // Continue without user data rather than failing completely
         }
       }
 
@@ -101,7 +127,7 @@ export const useVaultData = (userAddress?: string, tokenId: string = 'ob:usdc') 
     }
   }, [userAddress, tokenId, authenticated]);
 
-  // Auto-refresh every 30 seconds for real-time updates
+  // Standardized refresh interval of 30 seconds for consistent data sync
   useEffect(() => {
     fetchBotVaultData();
 

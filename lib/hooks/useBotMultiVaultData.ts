@@ -1,6 +1,14 @@
-// Multi-Vault Data Hook - Consolidated VaultData type
-// This hook fetches data for all vaults from bot APIs using unified VaultData interface
-// Updated: Added safe conversion of percentage strings to basis points for currentAPY
+// Updated: Fixed user address handling and standardized refresh intervals to prevent stale data
+// This hook is the single source of truth for all vault data from bot APIs using unified VaultData interface
+//
+// STALE DATA FIXES IMPLEMENTED:
+// 1. User address dependency chain: Waits for stable user address before fetching
+// 2. Authentication state reset: Clears user data when authentication changes
+// 3. Standardized refresh intervals: All data fetching uses 30-second intervals
+// 4. Error handling: Continues without user data rather than failing completely
+// 5. Race condition prevention: Proper state management during auth transitions
+//
+// This replaces the old useMultiVaultData hook to eliminate duplicate data sources
 
 import { useState, useEffect, useCallback } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
@@ -28,8 +36,26 @@ export const useBotMultiVaultData = (userAddress?: string | null) => {
     botHealthy: true,
   });
 
+  // Clear user data when authentication state changes
+  useEffect(() => {
+    if (!authenticated) {
+      setState(prev => ({
+        ...prev,
+        vaultsWithPositions: prev.allVaults.map(vault => ({
+          ...vault,
+          userWithdrawableAmount: undefined,
+          userYieldAmount: undefined,
+          userDepositAmount: undefined,
+          userShares: undefined,
+          percentageOfVault: undefined,
+          hasUserPosition: false,
+        })),
+      }));
+    }
+  }, [authenticated]);
+
   const fetchBotMultiVaultData = useCallback(async () => {
-    // Only wait for userAddress if we're authenticated but userAddress is explicitly undefined (not null)
+    // Don't fetch if we're waiting for user address to be resolved
     if (authenticated && userAddress === undefined) {
       return;
     }
@@ -42,13 +68,13 @@ export const useBotMultiVaultData = (userAddress?: string | null) => {
 
       let userPositions: BotUserInfo[] = [];
 
-      // Fetch user positions if user address is provided
+      // Fetch user positions if user address is provided and authenticated
       if (userAddress && authenticated) {
         try {
           userPositions = await botApi.getUserPositions(userAddress);
         } catch (userError) {
           console.warn('Failed to fetch user positions from bot:', userError);
-          // Continue without user data
+          // Continue without user data rather than failing completely
         }
       }
 
@@ -123,11 +149,11 @@ export const useBotMultiVaultData = (userAddress?: string | null) => {
     }
   }, [userAddress, authenticated]);
 
-  // Auto-refresh every 30 seconds for real-time updates
+  // Standardized refresh interval of 30 seconds for consistent data sync
   useEffect(() => {
     fetchBotMultiVaultData();
 
-    const interval = setInterval(fetchBotMultiVaultData, 120 * 1000);
+    const interval = setInterval(fetchBotMultiVaultData, 30000);
     return () => clearInterval(interval);
   }, [fetchBotMultiVaultData]);
 

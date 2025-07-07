@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useMultiVaultData } from '@/lib/hooks/useMultiVaultData';
 import { useBotMultiVaultData } from '@/lib/hooks/useBotMultiVaultData';
 import { CrossChainAllocations } from './vault/CrossChainAllocations';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -26,12 +25,10 @@ import {
 } from '@/lib/utils/vaultCalculations';
 
 export const Vaults = () => {
-  const { allVaults, loading, error, refetch } = useMultiVaultData(null); // Pass null to explicitly fetch all vault data without user info
+  // Vaults page shows only vault-level data - explicitly pass null to prevent user data queries
+  const { allVaults, loading, error, refetch } = useBotMultiVaultData(null);
 
-  // Also get bot data for enhanced features
-  const botData = useBotMultiVaultData(null);
-
-  console.log(allVaults);
+  console.log('Vaults page - vault-level data only:', allVaults);
 
   // Calculate vault aggregations using utility functions
   const totalValueLocked = calculateTotalValueLocked(allVaults);
@@ -45,7 +42,7 @@ export const Vaults = () => {
             <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
             <p className="text-lg font-medium mb-2">Loading Vault Data</p>
             <p className="text-muted-foreground text-center">
-              Fetching information from all vault contracts...
+              Fetching vault-level information from all contracts...
             </p>
           </CardContent>
         </Card>
@@ -83,6 +80,9 @@ export const Vaults = () => {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent mb-2">
             All Vaults Overview
           </h1>
+          <p className="text-muted-foreground">
+            View vault-level metrics and performance across all available vaults
+          </p>
           <div className="flex justify-center mt-4">
             <Button
               onClick={refetch}
@@ -146,7 +146,7 @@ export const Vaults = () => {
           </Card>
         </div>
 
-        {/* Vault List - Compact Layout */}
+        {/* Vault List - Shows only vault-level metrics, no user data */}
         <div className="space-y-4">
           {allVaults.map(vault => (
             <Card
@@ -170,7 +170,7 @@ export const Vaults = () => {
                     </div>
                   </div>
 
-                  {/* Vault Metrics - Horizontal Layout */}
+                  {/* Vault Metrics - Horizontal Layout (vault-level data only) */}
                   <div className="hidden md:flex items-center gap-8 flex-1 justify-center">
                     <div className="text-center">
                       <p className="text-xs text-muted-foreground">Total Deposited</p>
@@ -216,7 +216,7 @@ export const Vaults = () => {
                   </div>
                 </div>
 
-                {/* Mobile Layout - Show metrics in rows for small screens */}
+                {/* Mobile Layout - Show vault metrics in rows for small screens */}
                 <div className="md:hidden mt-4 grid grid-cols-2 gap-3">
                   <div className="text-center p-2 bg-muted/30 rounded">
                     <p className="text-xs text-muted-foreground">Deposited</p>

@@ -1,12 +1,11 @@
-// Updated: Fixed inconsistent position detection logic by using standardized utility function
+// Updated: Eliminated duplicate API calls by using single data source for consistency
 
 'use client';
 
 import { useState, useEffect } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import { useMultiVaultData } from '@/lib/hooks/useMultiVaultData';
+import { useBotMultiVaultData } from '@/lib/hooks/useBotMultiVaultData';
 import { useWithdraw } from '@/lib/hooks/useWithdraw';
-import { useVaultData } from '@/lib/hooks/useVaultData';
 import { CrossChainAllocations } from './vault/CrossChainAllocations';
 import { usePredictedAddress } from '@/lib/contexts/PredictedAddressContext';
 import { TokenVaultCard } from './TokenVaultCard';
@@ -44,25 +43,10 @@ export const VaultDashboard = () => {
     resetState,
   } = useWithdraw();
 
-  // Use multi-vault data for list view
-  const {
-    vaultsWithPositions,
-    allVaults,
-    loading: multiVaultLoading,
-    error: multiVaultError,
-    refetch: refetchMultiVault,
-  } = useMultiVaultData(predictedAddress || undefined);
-
-  // Use single vault data when viewing details
-  const {
-    data: singleVaultData,
-    loading: singleVaultLoading,
-    error: singleVaultError,
-    refetch: refetchSingleVault,
-  } = useVaultData(predictedAddress || undefined, selectedTokenId || 'ob:usdc');
-
-  // Also get bot vault data for enhanced features
-  const botVaultData = useVaultData(predictedAddress || undefined, selectedTokenId || 'ob:usdc');
+  // Use single data source - bot API multi-vault data for all vault information
+  const { vaultsWithPositions, allVaults, loading, error, refetch } = useBotMultiVaultData(
+    predictedAddress || undefined
+  );
 
   // Get predicted address when wallet connects
   useEffect(() => {
@@ -80,10 +64,9 @@ export const VaultDashboard = () => {
   useEffect(() => {
     if (withdrawSuccess) {
       // Refresh the vault data after successful withdrawal
-      refetchSingleVault();
-      refetchMultiVault();
+      refetch();
     }
-  }, [withdrawSuccess, refetchSingleVault, refetchMultiVault]);
+  }, [withdrawSuccess, refetch]);
 
   // Handle view details
   const handleViewDetails = (tokenId: string) => {
@@ -97,7 +80,14 @@ export const VaultDashboard = () => {
 
   // Handle withdraw - simplified for bot-managed system
   const handleWithdraw = async () => {
-    if (!selectedTokenId || !singleVaultData || !predictedAddress) {
+    if (!selectedTokenId || !predictedAddress) {
+      return;
+    }
+
+    // Find vault data from the single data source
+    const vaultData = allVaults.find(vault => vault.tokenId === selectedTokenId);
+    if (!vaultData) {
+      console.error('Vault data not found for token:', selectedTokenId);
       return;
     }
 
@@ -107,7 +97,7 @@ export const VaultDashboard = () => {
       return;
     }
 
-    const tokenAddress = findTokenBySymbol(singleVaultData.tokenSymbol!)!.address!['42161'];
+    const tokenAddress = findTokenBySymbol(vaultData.tokenSymbol!)!.address!['42161'];
 
     await executeWithdraw({
       vaultAddress,
@@ -119,12 +109,8 @@ export const VaultDashboard = () => {
 
   // Show detailed view for specific token
   if (selectedTokenId) {
-    const loading = singleVaultLoading;
-    const error = singleVaultError;
-    const vaultData = singleVaultData;
-    const refetch = refetchSingleVault;
-
-    const hasPosition = vaultData ? hasUserPosition(vaultData) : false;
+    // Find vault data from the single data source
+    const vaultData = allVaults.find(vault => vault.tokenId === selectedTokenId);
 
     if (loading) {
       return (
@@ -166,6 +152,30 @@ export const VaultDashboard = () => {
         </div>
       );
     }
+
+    if (!vaultData) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[600px] p-4">
+          <Card className="w-full max-w-4xl shadow-xl border-0 bg-gradient-to-b from-background to-muted/20">
+            <CardContent className="p-8">
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Vault Not Found</AlertTitle>
+                <AlertDescription>The selected vault could not be found.</AlertDescription>
+              </Alert>
+              <div className="mt-4 flex justify-center">
+                <Button onClick={handleBackToList} variant="outline">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to List
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    const hasPosition = hasUserPosition(vaultData);
 
     return (
       <div className="flex flex-col items-center justify-center min-h-[600px] p-4">
@@ -337,8 +347,8 @@ export const VaultDashboard = () => {
           )}
 
           {/* Cross-Chain Allocations (Enhanced Feature) */}
-          {botVaultData.data && botVaultData.data.crossChainAllocations?.length > 0 ? (
-            <CrossChainAllocations vaultData={botVaultData.data} />
+          {vaultData && vaultData.crossChainAllocations?.length > 0 ? (
+            <CrossChainAllocations vaultData={vaultData} />
           ) : (
             /* Fallback to Current Bot Strategy */
             <Card className="shadow-xl border-0 bg-gradient-to-b from-background to-muted/20">
@@ -370,9 +380,6 @@ export const VaultDashboard = () => {
   }
 
   // Show list view (default)
-  const loading = multiVaultLoading;
-  const error = multiVaultError;
-
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[600px] p-4">
@@ -399,7 +406,7 @@ export const VaultDashboard = () => {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
             <div className="mt-4 flex justify-center">
-              <Button onClick={refetchMultiVault} variant="outline">
+              <Button onClick={refetch} variant="outline">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Retry
               </Button>
@@ -422,7 +429,7 @@ export const VaultDashboard = () => {
             Track your yield vault positions across all supported tokens
           </p>
           <div className="flex justify-center">
-            <Button onClick={refetchMultiVault} variant="ghost" size="sm">
+            <Button onClick={refetch} variant="ghost" size="sm">
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh Data
             </Button>
