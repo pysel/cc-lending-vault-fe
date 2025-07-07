@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { VaultData } from '@/lib/hooks/useVaultData';
+import type { VaultData } from '@/lib/types/vault';
 import { ChevronRight, Eye } from 'lucide-react';
 import { TokenInfo } from './vault/TokenInfo';
 import { UserPosition } from './vault/UserPosition';

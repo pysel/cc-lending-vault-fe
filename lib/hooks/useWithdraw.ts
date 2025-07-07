@@ -20,7 +20,6 @@ interface WithdrawState {
 
 interface WithdrawRequest {
   vaultAddress: string;
-  userShares: bigint;
   userAddress: string;
   targetChain: string;
   tokenAddress: string;
@@ -43,30 +42,26 @@ export const useWithdraw = () => {
         return;
       }
 
-      if (!request.userShares || request.userShares === 0n) {
-        setState(prev => ({ ...prev, error: 'No shares to withdraw' }));
-        return;
-      }
+      // No need to check shares - bot-managed system handles all user funds
 
       setState(prev => ({ ...prev, loading: true, error: null, success: false }));
 
       try {
         // Log withdrawal details for debugging
-        console.log('🔄 Starting withdrawal with shares-based approach:', {
+        console.log('🔄 Starting withdrawal with bot-managed approach:', {
           vaultAddress: request.vaultAddress,
-          userShares: request.userShares.toString(),
           userAddress: request.userAddress,
           tokenAddress: request.tokenAddress,
         });
 
-        // Define the withdraw function ABI - uses shares instead of amount to prevent leftovers
-        const withdrawAbi = parseAbi(['function withdraw(address user, uint256 shares)']);
+        // Define the withdraw function ABI - simplified for bot-managed system
+        const withdrawAbi = parseAbi(['function withdraw(address user)']);
 
-        // Encode the withdraw function call data
+        // Encode the withdraw function call data - no shares needed, withdraws all
         const withdrawCalldata = encodeFunctionData({
           abi: withdrawAbi,
           functionName: 'withdraw',
-          args: [request.userAddress as Hex, request.userShares],
+          args: [request.userAddress as Hex],
         });
 
         // Create EVM account
@@ -149,8 +144,8 @@ export const useWithdraw = () => {
           throw new Error(executeResult.error || 'Withdraw execution failed');
         }
 
-        console.log('✅ Withdrawal successful - all shares withdrawn:', {
-          sharesWithdrawn: request.userShares.toString(),
+        console.log('✅ Withdrawal successful - all user funds withdrawn:', {
+          userAddress: request.userAddress,
           quoteId: quote.id,
         });
 

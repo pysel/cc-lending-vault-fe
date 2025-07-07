@@ -1,9 +1,12 @@
+// Updated: Fixed inconsistent position detection logic by using standardized utility function
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { VaultData } from '@/lib/hooks/useVaultData';
-import { TrendingUp, Wallet, Info } from 'lucide-react';
+import type { VaultData } from '@/lib/types/vault';
+import { TrendingUp, Wallet, Info, PieChart } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/conversions';
+import { hasUserPosition } from '@/lib/utils/vaultCalculations';
 
 interface UserPositionProps {
   vaultData: VaultData;
@@ -21,9 +24,8 @@ export const UserPosition = ({ vaultData, variant = 'card', authenticated }: Use
     );
   }
 
-  // Check if user has a position by looking at actual values instead of hasUserPosition flag
-  const hasPosition =
-    vaultData.userWithdrawableAmount && Number(vaultData.userWithdrawableAmount) > 0;
+  // Use standardized position detection to prevent inconsistencies
+  const hasPosition = hasUserPosition(vaultData);
 
   if (!hasPosition) {
     return (
@@ -63,6 +65,19 @@ export const UserPosition = ({ vaultData, variant = 'card', authenticated }: Use
             ${formatCurrency(vaultData.userYieldAmount, vaultData.tokenDecimals)}
           </p>
         </div>
+
+        {/* Portfolio Percentage (if available from bot data) */}
+        {'percentageOfVault' in vaultData && vaultData.percentageOfVault !== undefined && (
+          <div className="p-3 bg-purple-50 dark:bg-purple-950 rounded-lg">
+            <div className="flex items-center gap-1 mb-1">
+              <PieChart className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+              <span className="text-xs text-purple-600 dark:text-purple-400">Vault Share</span>
+            </div>
+            <p className="font-semibold text-purple-900 dark:text-purple-100">
+              {vaultData.percentageOfVault.toFixed(3)}%
+            </p>
+          </div>
+        )}
       </div>
     );
   }

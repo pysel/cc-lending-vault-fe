@@ -4,6 +4,9 @@
 .
 ├── .cursor
 │   └── rules
+│       ├── big_changes
+│       │   ├── share-management-migration-fe.md
+│       │   └── share-management-migration.md
 │       ├── guidelines.txt
 │       ├── sdk_docs
 │       │   └── ethers-docs.txt
@@ -32,6 +35,7 @@
 │   └── sitemap.ts
 ├── components
 │   ├── BalanceDisplay.tsx
+│   ├── BotHealthStatus.tsx
 │   ├── ConnectButton.tsx
 │   ├── DepositDisplay.tsx
 │   ├── DepositTokenSelect.tsx
@@ -50,10 +54,12 @@
 │   │   ├── dialog.tsx
 │   │   ├── dropdown-menu.tsx
 │   │   ├── input.tsx
+│   │   ├── progress.tsx
 │   │   ├── select.tsx
 │   │   ├── skeleton.tsx
 │   │   └── token-image.tsx
 │   ├── vault
+│   │   ├── CrossChainAllocations.tsx
 │   │   ├── TokenInfo.tsx
 │   │   ├── UserPosition.tsx
 │   │   └── VaultMetrics.tsx
@@ -70,6 +76,7 @@
 │   │   ├── account.ts
 │   │   ├── assets.ts
 │   │   ├── balances.ts
+│   │   ├── bot.ts
 │   │   └── chains.ts
 │   ├── api.ts
 │   ├── constants.ts
@@ -79,6 +86,7 @@
 │   │   ├── index.ts
 │   │   ├── useAssets.ts
 │   │   ├── useBalances.ts
+│   │   ├── useBotMultiVaultData.ts
 │   │   ├── useChains.ts
 │   │   ├── useDepositQuotes.ts
 │   │   ├── useEmbeddedWallet.ts
@@ -88,8 +96,10 @@
 │   ├── types
 │   │   ├── assets.ts
 │   │   ├── balances.ts
+│   │   ├── bot.ts
 │   │   ├── chains.ts
-│   │   └── quote.ts
+│   │   ├── quote.ts
+│   │   └── vault.ts
 │   ├── utils
 │   │   ├── chain.ts
 │   │   ├── conversions.ts
@@ -110,5 +120,5 @@
 │   └── window.svg
 └── tsconfig.json
 
-19 directories, 89 files
+20 directories, 98 files
 ```

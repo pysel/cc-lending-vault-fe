@@ -1,7 +1,7 @@
 'use client';
 
 import { Badge } from '../ui/badge';
-import { VaultData } from '@/lib/hooks/useVaultData';
+import type { VaultData } from '@/lib/types/vault';
 import { PieChart, DollarSign } from 'lucide-react';
 import { formatPercentage } from '@/lib/utils/conversions';
 

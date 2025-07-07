@@ -1,6 +1,6 @@
 'use client';
 
-import { VaultData } from '@/lib/hooks/useVaultData';
+import { VaultData } from '@/lib/types/vault';
 import { Badge } from '../ui/badge';
 
 interface TokenInfoProps {

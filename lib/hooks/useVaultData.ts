@@ -1,73 +1,20 @@
+// Vault Data Hook - Consolidated VaultData type
+// This hook fetches vault data from bot APIs with a single unified VaultData interface
+// Updated: Added safe conversion of percentage strings to basis points for currentAPY
+
 import { useState, useEffect, useCallback } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import { parseAbi, createPublicClient, http } from 'viem';
-import { arbitrum } from 'viem/chains';
-import { getVaultAddress, tokenList } from '@/lib/constants';
-
-// Vault contract ABI updated for the refactored TokenYieldVault contract
-export const vaultAbi = parseAbi([
-  // Core vault metrics
-  'function getCurrentATokenBalance() view returns (uint256)',
-  'function getSharePrice() view returns (uint256)',
-  'function getTotalYieldEarned() view returns (uint256)',
-  'function totalShares() view returns (uint256)',
-  'function totalDeposits() view returns (uint256)',
-  'function currentAllocation() view returns (string)',
-  'function currentAPY() view returns (uint256)',
-
-  // Contract addresses
-  'function bot() view returns (address)',
-  'function token() view returns (address)',
-  'function aToken() view returns (address)',
-
-  // User-specific methods
-  'function getUserWithdrawableAmount(address user) view returns (uint256)',
-  'function getUserShares(address user) view returns (uint256)',
-  'function getUserYieldAmount(address user) view returns (uint256)',
-  'function getUserDepositAmount(address user) view returns (uint256)',
-
-  // New calculation methods from refactored contract
-  'function calculateSharesToMint(uint256 depositAmount) view returns (uint256)',
-  'function calculateTokensForShares(uint256 shares) view returns (uint256)',
-]);
-
-export interface VaultData {
-  // Token information
-  tokenId?: string;
-  tokenSymbol?: string;
-  tokenName?: string;
-  tokenIcon?: string;
-  tokenDecimals: number;
-
-  // Contract addresses
-  vaultAddress?: string;
-  botAddress?: string;
-  tokenAddress?: string;
-  aTokenAddress?: string;
-
-  // Vault metrics
-  currentATokenBalance: bigint;
-  totalYieldEarned: bigint;
-  totalDeposits: bigint;
-  currentAllocation: string;
-  currentAPY: bigint;
-
-  // User data
-  userWithdrawableAmount?: bigint;
-  userYieldAmount?: bigint;
-  userDepositAmount?: bigint;
-  hasUserPosition?: boolean;
-
-  // Internal bookkeeping (not displayed to users)
-  sharePrice?: bigint;
-  totalShares?: bigint;
-  userShares?: bigint;
-}
+import { botApi } from '@/lib/api/bot';
+import { BotUserInfo } from '@/lib/types/bot';
+import { findTokenByAggregatedAssetId } from '@/lib/constants';
+import type { VaultData } from '@/lib/types/vault';
+import { percentageStringToBasisPoints } from '@/lib/utils/conversions';
 
 export interface VaultDataState {
   data: VaultData | null;
   loading: boolean;
   error: string | null;
+  botHealthy: boolean;
 }
 
 export const useVaultData = (userAddress?: string, tokenId: string = 'ob:usdc') => {
@@ -76,168 +23,94 @@ export const useVaultData = (userAddress?: string, tokenId: string = 'ob:usdc') 
     data: null,
     loading: false,
     error: null,
+    botHealthy: true,
   });
 
-  const fetchVaultData = useCallback(async () => {
-    const vaultAddress = getVaultAddress(tokenId);
-    if (!vaultAddress) {
-      setState(prev => ({ ...prev, error: 'Vault not found for token' }));
-      return;
-    }
-
+  const fetchBotVaultData = useCallback(async () => {
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      // Create a public client for Arbitrum (where the vault lives)
-      const client = createPublicClient({
-        chain: arbitrum,
-        transport: http(process.env.NEXT_PUBLIC_ARBITRUM_RPC_URL),
-      });
+      // Get token information
+      const tokenInfo = findTokenByAggregatedAssetId(tokenId);
+      if (!tokenInfo) {
+        throw new Error('Token not found');
+      }
 
-      // Fetch general vault data
-      const [
-        currentATokenBalance,
-        sharePrice,
-        totalYieldEarned,
-        totalShares,
-        totalDeposits,
-        currentAllocation,
-        currentAPY,
-        botAddress,
-        tokenAddress,
-        aTokenAddress,
-      ] = await Promise.all([
-        client.readContract({
-          address: vaultAddress as `0x${string}`,
-          abi: vaultAbi,
-          functionName: 'getCurrentATokenBalance',
-        }),
-        client.readContract({
-          address: vaultAddress as `0x${string}`,
-          abi: vaultAbi,
-          functionName: 'getSharePrice',
-        }),
-        client.readContract({
-          address: vaultAddress as `0x${string}`,
-          abi: vaultAbi,
-          functionName: 'getTotalYieldEarned',
-        }),
-        client.readContract({
-          address: vaultAddress as `0x${string}`,
-          abi: vaultAbi,
-          functionName: 'totalShares',
-        }),
-        client.readContract({
-          address: vaultAddress as `0x${string}`,
-          abi: vaultAbi,
-          functionName: 'totalDeposits',
-        }),
-        client.readContract({
-          address: vaultAddress as `0x${string}`,
-          abi: vaultAbi,
-          functionName: 'currentAllocation',
-        }),
-        client.readContract({
-          address: vaultAddress as `0x${string}`,
-          abi: vaultAbi,
-          functionName: 'currentAPY',
-        }),
-        client.readContract({
-          address: vaultAddress as `0x${string}`,
-          abi: vaultAbi,
-          functionName: 'bot',
-        }),
-        client.readContract({
-          address: vaultAddress as `0x${string}`,
-          abi: vaultAbi,
-          functionName: 'token',
-        }),
-        client.readContract({
-          address: vaultAddress as `0x${string}`,
-          abi: vaultAbi,
-          functionName: 'aToken',
-        }),
-      ]);
+      // Fetch vault metrics from bot
+      const vaultMetrics = await botApi.getVaultMetrics(tokenId);
 
-      let userShares: bigint | undefined;
-      let userWithdrawableAmount: bigint | undefined;
-      let userYieldAmount: bigint | undefined;
-      let userDepositAmount: bigint | undefined;
+      let userInfo: BotUserInfo | null = null;
 
       // Fetch user-specific data if user address is provided
       if (userAddress && authenticated) {
         try {
-          [userShares, userWithdrawableAmount, userYieldAmount, userDepositAmount] =
-            await Promise.all([
-              client.readContract({
-                address: vaultAddress as `0x${string}`,
-                abi: vaultAbi,
-                functionName: 'getUserShares',
-                args: [userAddress as `0x${string}`],
-              }),
-              client.readContract({
-                address: vaultAddress as `0x${string}`,
-                abi: vaultAbi,
-                functionName: 'getUserWithdrawableAmount',
-                args: [userAddress as `0x${string}`],
-              }),
-              client.readContract({
-                address: vaultAddress as `0x${string}`,
-                abi: vaultAbi,
-                functionName: 'getUserYieldAmount',
-                args: [userAddress as `0x${string}`],
-              }),
-              client.readContract({
-                address: vaultAddress as `0x${string}`,
-                abi: vaultAbi,
-                functionName: 'getUserDepositAmount',
-                args: [userAddress as `0x${string}`],
-              }),
-            ]);
+          userInfo = await botApi.getUserInfo(userAddress, tokenId);
         } catch (userError) {
-          console.warn('Failed to fetch user-specific vault data:', userError);
+          console.warn('Failed to fetch user-specific bot data:', userError);
           // Continue without user data
         }
       }
 
-      const tokenDecimals =
-        tokenList.find(token => token.aggregatedAssetId === tokenId)?.decimals || 18;
-
+      // Convert string values to bigint for component compatibility
       const vaultData: VaultData = {
-        currentATokenBalance: currentATokenBalance as bigint,
-        sharePrice: sharePrice as bigint,
-        totalYieldEarned: totalYieldEarned as bigint,
-        totalShares: totalShares as bigint,
-        totalDeposits: totalDeposits as bigint,
-        currentAllocation: currentAllocation as string,
-        currentAPY: currentAPY as bigint,
-        botAddress: botAddress as string,
-        tokenAddress: tokenAddress as string,
-        aTokenAddress: aTokenAddress as string,
-        tokenDecimals,
-        userShares,
-        userWithdrawableAmount,
-        userYieldAmount,
-        userDepositAmount,
+        tokenId,
+        tokenSymbol: tokenInfo.symbol,
+        tokenName: tokenInfo.name || tokenInfo.symbol,
+        tokenIcon: tokenInfo.icon,
+        tokenDecimals: tokenInfo.decimals,
+
+        // Vault metrics
+        currentATokenBalance: BigInt(vaultMetrics.currentATokenBalance),
+        totalYieldEarned: BigInt(vaultMetrics.totalYieldEarned),
+        totalDeposits: BigInt(vaultMetrics.totalDeposits),
+        currentAllocation: vaultMetrics.currentAllocation,
+        currentAPY: percentageStringToBasisPoints(vaultMetrics.currentAPY),
+        sharePrice: BigInt(vaultMetrics.sharePrice),
+        totalShares: BigInt(vaultMetrics.totalShares),
+
+        // Cross-chain allocations
+        crossChainAllocations: vaultMetrics.crossChainAllocations,
+
+        // User data
+        userWithdrawableAmount: userInfo ? BigInt(userInfo.withdrawableAmount) : undefined,
+        userYieldAmount: userInfo ? BigInt(userInfo.yieldEarned) : undefined,
+        userDepositAmount: userInfo ? BigInt(userInfo.depositAmount) : undefined,
+        userShares: userInfo ? BigInt(userInfo.shares) : undefined,
+        percentageOfVault: userInfo?.percentageOfVault,
+        hasUserPosition: userInfo ? BigInt(userInfo.shares) > 0n : false,
+
+        // Metadata
+        lastUpdated: userInfo?.lastUpdated || Date.now(),
+        isFromBot: true,
       };
 
-      setState(prev => ({ ...prev, data: vaultData, loading: false }));
-    } catch (error) {
-      console.error('Failed to fetch vault data:', error);
       setState(prev => ({
         ...prev,
-        error: error instanceof Error ? error.message : 'Failed to fetch vault data',
+        data: vaultData,
         loading: false,
+        botHealthy: true,
+      }));
+    } catch (error) {
+      console.error('Failed to fetch bot vault data:', error);
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Failed to fetch bot vault data',
+        loading: false,
+        botHealthy: false,
       }));
     }
   }, [userAddress, tokenId, authenticated]);
 
+  // Auto-refresh every 30 seconds for real-time updates
   useEffect(() => {
-    fetchVaultData();
-  }, [fetchVaultData]);
+    fetchBotVaultData();
+
+    const interval = setInterval(fetchBotVaultData, 30000);
+    return () => clearInterval(interval);
+  }, [fetchBotVaultData]);
 
   return {
     ...state,
-    refetch: fetchVaultData,
+    refetch: fetchBotVaultData,
   };
 };

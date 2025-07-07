@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { OptimizedImage } from './optimized-image';
 
 interface TokenImageProps {
   src?: string | null;
@@ -35,7 +34,7 @@ export const TokenImage = ({
   }
 
   return (
-    <OptimizedImage
+    <img
       src={src}
       alt={alt}
       width={width}

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useMultiVaultData } from '@/lib/hooks/useMultiVaultData';
+import { useBotMultiVaultData } from '@/lib/hooks/useBotMultiVaultData';
+import { CrossChainAllocations } from './vault/CrossChainAllocations';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -25,6 +27,9 @@ import {
 
 export const Vaults = () => {
   const { allVaults, loading, error, refetch } = useMultiVaultData(null); // Pass null to explicitly fetch all vault data without user info
+
+  // Also get bot data for enhanced features
+  const botData = useBotMultiVaultData(null);
 
   console.log(allVaults);
 

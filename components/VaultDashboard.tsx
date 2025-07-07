@@ -1,10 +1,13 @@
+// Updated: Fixed inconsistent position detection logic by using standardized utility function
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
-import { useVaultData } from '@/lib/hooks/useVaultData';
 import { useMultiVaultData } from '@/lib/hooks/useMultiVaultData';
 import { useWithdraw } from '@/lib/hooks/useWithdraw';
+import { useVaultData } from '@/lib/hooks/useVaultData';
+import { CrossChainAllocations } from './vault/CrossChainAllocations';
 import { usePredictedAddress } from '@/lib/contexts/PredictedAddressContext';
 import { TokenVaultCard } from './TokenVaultCard';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -25,8 +28,8 @@ import {
   LogOut,
 } from 'lucide-react';
 import { formatCurrency, formatPercentage } from '@/lib/utils/conversions';
-import { calculateYieldPerformance } from '@/lib/utils/vaultCalculations';
-import { ARBITRUM_TARGET_CHAIN_ID, getVaultAddress } from '@/lib/constants';
+import { calculateYieldPerformance, hasUserPosition } from '@/lib/utils/vaultCalculations';
+import { ARBITRUM_TARGET_CHAIN_ID, findTokenBySymbol, getVaultAddress } from '@/lib/constants';
 
 export const VaultDashboard = () => {
   const { authenticated } = usePrivy();
@@ -57,6 +60,9 @@ export const VaultDashboard = () => {
     error: singleVaultError,
     refetch: refetchSingleVault,
   } = useVaultData(predictedAddress || undefined, selectedTokenId || 'ob:usdc');
+
+  // Also get bot vault data for enhanced features
+  const botVaultData = useVaultData(predictedAddress || undefined, selectedTokenId || 'ob:usdc');
 
   // Get predicted address when wallet connects
   useEffect(() => {
@@ -89,9 +95,9 @@ export const VaultDashboard = () => {
     setSelectedTokenId(null);
   };
 
-  // Handle withdraw
+  // Handle withdraw - simplified for bot-managed system
   const handleWithdraw = async () => {
-    if (!selectedTokenId || !singleVaultData || !predictedAddress || !singleVaultData.userShares) {
+    if (!selectedTokenId || !singleVaultData || !predictedAddress) {
       return;
     }
 
@@ -101,12 +107,13 @@ export const VaultDashboard = () => {
       return;
     }
 
+    const tokenAddress = findTokenBySymbol(singleVaultData.tokenSymbol!)!.address!['42161'];
+
     await executeWithdraw({
       vaultAddress,
-      userShares: singleVaultData.userShares,
       userAddress: predictedAddress,
       targetChain: ARBITRUM_TARGET_CHAIN_ID,
-      tokenAddress: singleVaultData.tokenAddress || '',
+      tokenAddress: tokenAddress || '',
     });
   };
 
@@ -117,7 +124,7 @@ export const VaultDashboard = () => {
     const vaultData = singleVaultData;
     const refetch = refetchSingleVault;
 
-    const hasPosition = vaultData?.userShares && vaultData.userShares > 0n;
+    const hasPosition = vaultData ? hasUserPosition(vaultData) : false;
 
     if (loading) {
       return (
@@ -329,29 +336,34 @@ export const VaultDashboard = () => {
             </Card>
           )}
 
-          {/* Current Bot Strategy */}
-          <Card className="shadow-xl border-0 bg-gradient-to-b from-background to-muted/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <PieChart className="h-5 w-5" />
-                Current Bot Strategy
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="p-4 bg-muted/50 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">Active Strategy</span>
-                  <Badge variant="secondary">Live</Badge>
+          {/* Cross-Chain Allocations (Enhanced Feature) */}
+          {botVaultData.data && botVaultData.data.crossChainAllocations?.length > 0 ? (
+            <CrossChainAllocations vaultData={botVaultData.data} />
+          ) : (
+            /* Fallback to Current Bot Strategy */
+            <Card className="shadow-xl border-0 bg-gradient-to-b from-background to-muted/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <PieChart className="h-5 w-5" />
+                  Current Bot Strategy
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">Active Strategy</span>
+                    <Badge variant="secondary">Live</Badge>
+                  </div>
+                  <p className="text-lg font-semibold">
+                    {vaultData?.currentAllocation || 'Aave Lending'}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Bot is currently allocating funds to maximize yield through this strategy
+                  </p>
                 </div>
-                <p className="text-lg font-semibold">
-                  {vaultData?.currentAllocation || 'Aave Lending'}
-                </p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Bot is currently allocating funds to maximize yield through this strategy
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     );

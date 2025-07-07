@@ -263,10 +263,10 @@ export const useDepositQuotes = () => {
         // Use Arbitrum asset type for tokensRequired and allowanceRequirements
         const arbitrumAssetType = arbitrumAsset.assetType;
 
-        // Define the deposit function ABI
+        // Define the deposit function ABI - simplified for bot-managed system
         const depositAbi = parseAbi(['function deposit(address user, uint256 amount)']);
 
-        // Encode the deposit function call data
+        // Encode the deposit function call data - no shares calculation needed
         const depositCalldata = encodeFunctionData({
           abi: depositAbi,
           functionName: 'deposit',

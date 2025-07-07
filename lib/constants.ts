@@ -1,6 +1,9 @@
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://be.onebalance.io';
 export const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
 
+export const BOT_API_BASE_URL = process.env.NEXT_PUBLIC_BOT_API_URL;
+export const BOT_API_KEY = process.env.NEXT_PUBLIC_BOT_API_KEY;
+
 export interface LEGACY_Token {
   aggregatedAssetId: string;
   symbol: string;
@@ -14,8 +17,8 @@ export interface LEGACY_Token {
 export const ARBITRUM_TARGET_CHAIN_ID = 'eip155:42161';
 
 export const TOKEN_TO_VAULT_MAP: Record<string, string> = {
-  'ob:usdc': '0x13b03aE4e2aa541d59b4fa5F11D1318002d0a18c',
-  'ob:usdt': '0x0ECE448401daD3D215f0DddB62022609A567B818',
+  'ob:usdc': '0x5546b7c20F660e8fd43691A712f18b5C85d3F9e3',
+  'ob:usdt': '0x405f2aa9d63CCfa61CeA3D4d87DB71Fbe07fc53A',
 };
 
 export const tokenList: LEGACY_Token[] = [

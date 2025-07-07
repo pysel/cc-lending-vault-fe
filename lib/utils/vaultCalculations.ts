@@ -1,3 +1,7 @@
+// Updated: Added hasUserPosition utility to standardize position detection across components
+
+import type { VaultData } from '@/lib/types/vault';
+
 /**
  * Calculate yield performance percentage
  * @param totalYieldEarned - Total yield earned in vault currency
@@ -33,6 +37,39 @@ export const calculateTotalValueLocked = (
 };
 
 /**
+ * Calculate total cross-chain allocations summary
+ * @param vaults - Array of bot vault data with cross-chain allocations
+ * @returns Summary of cross-chain allocations
+ */
+export const calculateCrossChainSummary = (
+  vaults: Array<{
+    crossChainAllocations?: Array<{ chain: string; amount: string; percentage: number }>;
+    tokenDecimals?: number;
+  }>
+): { totalChains: number; totalAllocated: number; chainBreakdown: Record<string, number> } => {
+  const chainBreakdown: Record<string, number> = {};
+  let totalAllocated = 0;
+  const chainsUsed = new Set<string>();
+
+  vaults.forEach(vault => {
+    if (vault.crossChainAllocations) {
+      vault.crossChainAllocations.forEach(allocation => {
+        chainsUsed.add(allocation.chain);
+        const amount = parseFloat(allocation.amount) / Math.pow(10, vault.tokenDecimals || 6);
+        chainBreakdown[allocation.chain] = (chainBreakdown[allocation.chain] || 0) + amount;
+        totalAllocated += amount;
+      });
+    }
+  });
+
+  return {
+    totalChains: chainsUsed.size,
+    totalAllocated,
+    chainBreakdown,
+  };
+};
+
+/**
  * Calculate average APY across multiple vaults
  * @param vaults - Array of vault data with APY
  * @returns Average APY as number
@@ -55,4 +92,19 @@ export const calculateAverageAPY = (vaults: Array<{ currentAPY?: bigint }>): num
 export const formatAddress = (address?: string): string => {
   if (!address) return 'Unknown';
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
+};
+
+/**
+ * Determines if a user has a position in a vault using multiple robust checks
+ * This prevents inconsistencies between different components checking different fields
+ */
+export const hasUserPosition = (vaultData: VaultData): boolean => {
+  // Use multiple indicators for robustness during data transitions
+  const hasShares = vaultData.userShares && vaultData.userShares > 0n;
+  const hasWithdrawable =
+    vaultData.userWithdrawableAmount && Number(vaultData.userWithdrawableAmount) > 0;
+  const flaggedAsHasPosition = vaultData.hasUserPosition === true;
+
+  // Return true if ANY of these conditions are met to prevent flickering during updates
+  return hasShares || hasWithdrawable || flaggedAsHasPosition;
 };
