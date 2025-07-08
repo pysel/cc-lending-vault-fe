@@ -25,11 +25,16 @@ export const Providers = ({ children }: ProvidersProps) => (
               // Create embedded wallets for users who don't have a wallet
               createOnLogin: 'users-without-wallets',
             },
-            loginMethods: ['email', 'passkey', 'wallet'],
+            loginMethods: ['email', 'google', 'sms', 'passkey', 'wallet'],
             appearance: {
-              theme: 'light',
-              accentColor: '#FFAB40',
+              theme: 'dark',
+              accentColor: '#fa9e39',
             },
+            // fundingMethodConfig: {
+            //   moonpay: {
+            //     useSandbox: true,
+            //   },
+            // },
           }}
         >
           <PredictedAddressProvider>{children}</PredictedAddressProvider>
