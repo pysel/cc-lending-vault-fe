@@ -1,6 +1,6 @@
 {
-  "name": "onebalance-chain-abstracted-swap",
-  "author": "@dzimiks",
+  "name": "oneyield-cross-chain-vault",
+  "author": "@pysel",
   "version": "0.1.0",
   "private": true,
   "scripts": {
