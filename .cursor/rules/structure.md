@@ -90,7 +90,6 @@
 │   │   ├── useChains.ts
 │   │   ├── useDepositQuotes.ts
 │   │   ├── useEmbeddedWallet.ts
-│   │   ├── useMultiVaultData.ts
 │   │   ├── useVaultData.ts
 │   │   └── useWithdraw.ts
 │   ├── types
@@ -120,5 +119,5 @@
 │   └── window.svg
 └── tsconfig.json
 
-20 directories, 98 files
+20 directories, 97 files
 ```

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { OneBalanceWithdrawQuoteRequest } from './types/withdraw';
 
 export const apiClient = axios.create({
   baseURL: '/api',
@@ -28,6 +29,10 @@ export const quoteClient = {
   },
   getQuoteStatus: async (quoteId: string): Promise<QuoteStatus> => {
     const response = await apiClient.get(`/status/get-execution-status?quoteId=${quoteId}`);
+    return response.data;
+  },
+  getV1Quote: async (request: OneBalanceWithdrawQuoteRequest): Promise<Quote> => {
+    const response = await apiClient.post('/v1/quote', request);
     return response.data;
   },
 };

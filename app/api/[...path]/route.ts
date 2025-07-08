@@ -55,6 +55,7 @@ export async function GET(
     return NextResponse.json(data);
   } catch (error) {
     console.error(`API Error for ${isBotApi ? 'Bot' : 'OneBalance'} API:`, error);
+    console.log(error);
     return NextResponse.json(
       {
         message: `Failed to fetch data from ${isBotApi ? 'Bot' : 'OneBalance'} API`,
@@ -99,7 +100,8 @@ export async function POST(
     });
 
     if (!response.ok) {
-      console.error(`API Error for ${isBotApi ? 'Bot' : 'OneBalance'} API:`, response);
+      console.log('ERROR', await response.json());
+      // console.error(`API Error for ${isBotApi ? 'Bot' : 'OneBalance'} API:`, response);
       throw new Error(`API responded with status ${response.status}`);
     }
 

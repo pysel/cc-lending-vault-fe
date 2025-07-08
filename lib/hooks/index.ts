@@ -3,14 +3,14 @@
 
 export { useAssets } from './useAssets';
 export { useBalances } from './useBalances';
+export { useBotMultiVaultData } from './useBotMultiVaultData';
+export { useEmbeddedWallet } from './useEmbeddedWallet';
 export { useChains } from './useChains';
-
 export { useVaultData } from './useVaultData';
 export { useDepositQuotes } from './useDepositQuotes';
 export { useWithdraw } from './useWithdraw';
-export { useEmbeddedWallet } from './useEmbeddedWallet';
+export { useWithdrawCustom } from './useWithdrawCustom';
 
 // Bot API hooks - single source of truth for vault data
-export { useBotMultiVaultData } from './useBotMultiVaultData';
 // Alias for backward compatibility
 export { useBotMultiVaultData as useMultiVaultData } from './useBotMultiVaultData';

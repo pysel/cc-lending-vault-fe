@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Wallet, ChevronRight, LogOut } from 'lucide-react';
+import { Wallet, ChevronRight, LogOut, ArrowUpRight } from 'lucide-react';
 import { useBalances } from '@/lib/hooks/useBalances';
 import { useAssets } from '@/lib/hooks/useAssets';
 import { useEmbeddedWallet } from '@/lib/hooks';
@@ -13,12 +13,14 @@ import { WalletHeader } from '@/components/wallet/WalletHeader';
 import { AccountAddress } from '@/components/wallet/AccountAddress';
 import { PortfolioSummary } from '@/components/wallet/PortfolioSummary';
 import { AssetList } from '@/components/wallet/AssetList';
+import { WithdrawDialog } from '@/components/WithdrawDialog';
 
 export const ConnectButton = () => {
   const { login, logout, authenticated, ready } = usePrivy();
   const embeddedWallet = useEmbeddedWallet();
   const { predictedAddress, getPredictedAddress } = usePredictedAddress();
   const [open, setOpen] = useState(false);
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
 
   const { balances, loading: balancesLoading, fetchBalances } = useBalances(predictedAddress);
   const { assets } = useAssets();
@@ -142,16 +144,19 @@ export const ConnectButton = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Quick Logout Button */}
+      {/* Quick Withdraw Button */}
       <Button
         variant="ghost"
         size="sm"
-        onClick={logout}
-        className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-700 dark:hover:text-red-300 transition-colors"
-        title="Disconnect Wallet"
+        onClick={() => setWithdrawOpen(true)}
+        className="text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/20 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
+        title="Initiate Withdraw"
       >
-        <LogOut className="h-4 w-4" />
+        <ArrowUpRight className="h-4 w-4" />
       </Button>
+
+      {/* Withdraw Dialog */}
+      <WithdrawDialog open={withdrawOpen} onOpenChange={setWithdrawOpen} />
     </div>
   );
 };
