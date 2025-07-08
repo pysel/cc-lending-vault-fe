@@ -291,7 +291,7 @@ export const DepositDisplay = () => {
 
         <CardContent className="space-y-10">
           {/* Transaction Failed Status */}
-          {status?.status === 'FAILED' && (
+          {(status?.status === 'FAILED' || status?.status === 'REFUNDED') && (
             <div className="space-y-4">
               <Alert variant="destructive">
                 <TriangleAlert className="h-4 w-4" />

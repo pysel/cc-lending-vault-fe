@@ -478,7 +478,7 @@ export const useDepositQuotes = () => {
                     // Trigger completion via a different mechanism
                     completedStatus: quoteStatus,
                   }));
-                } else if (actualStatus === 'FAILED') {
+                } else if (actualStatus === 'FAILED' || actualStatus === 'REFUNDED') {
                   // For FAILED, we do want to show the error state
                   const transaction = {
                     quoteId: quoteStatus.quoteId,
