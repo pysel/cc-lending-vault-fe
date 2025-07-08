@@ -17,8 +17,8 @@ export interface LEGACY_Token {
 export const ARBITRUM_TARGET_CHAIN_ID = 'eip155:42161';
 
 export const TOKEN_TO_VAULT_MAP: Record<string, string> = {
-  'ob:usdc': '0x14B30C90710424F8BBA8C5a8f1145168dF98afaD',
-  'ob:usdt': '0x90d76C6d2DBbbaA30d2Be2646bB9b7741504F793',
+  'ob:usdc': '0xBd6343697Ad795550af8f864404f874911347256',
+  'ob:usdt': '0x195f497dA8A1F413f3b5FBba7953D62903ccaD44',
 };
 
 export const tokenList: LEGACY_Token[] = [
