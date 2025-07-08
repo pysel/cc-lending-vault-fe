@@ -2,10 +2,9 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'OneBalance Chain-Abstracted Swap',
-    short_name: 'OneBalance',
-    description:
-      'Modern chain-abstracted token swap and transfer application built with OneBalance Chain Abstraction Toolkit.',
+    name: 'OneYield Cross-Chain Vault',
+    short_name: 'OneYield',
+    description: 'Chain-abstracted cross-chain vault for maximizing yield farming.',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',

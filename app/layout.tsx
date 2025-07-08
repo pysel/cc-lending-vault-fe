@@ -15,11 +15,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'OneBalance Chain-Abstracted Swap',
+    default: 'OneYield Cross-Chain Vault',
     template: '%s | OneBalance',
   },
-  description:
-    'Modern chain-abstracted token swap and transfer application built with OneBalance Chain Abstraction Toolkit. Swap tokens across multiple blockchains with a unified interface.',
+  description: 'Chain-abstracted cross-chain vault for maximizing yield farming.',
   keywords: [
     'chain-abstracted',
     'defi',
@@ -33,55 +32,9 @@ export const metadata: Metadata = {
   ],
   authors: [
     {
-      name: 'OneBalance Team',
+      name: 'pysel',
     },
   ],
-  creator: 'OneBalance Team',
-  publisher: 'OneBalance',
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  metadataBase: new URL('https://onebalance-chain-abstracted-swap.vercel.app'),
-  alternates: {
-    canonical: '/',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    url: 'https://onebalance-chain-abstracted-swap.vercel.app',
-    title: 'OneBalance Chain-Abstracted Swap',
-    description:
-      'Modern chain-abstracted token swap and transfer application built with OneBalance Chain Abstraction Toolkit.',
-    siteName: 'OneBalance Chain-Abstracted Swap',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'OneBalance Chain-Abstracted Swap',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'OneBalance Chain-Abstracted Swap',
-    description:
-      'Modern chain-abstracted token swap and transfer application built with OneBalance Chain Abstraction Toolkit.',
-    images: ['/og-image.png'],
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
 };
 
 export default function RootLayout({
