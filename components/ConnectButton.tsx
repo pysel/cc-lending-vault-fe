@@ -1,3 +1,6 @@
+// This component handles user authentication and displays the wallet connection status.
+// It includes a dialog for viewing account details, a button to initiate withdrawals,
+// and a new deposit button to fund the account.
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -14,6 +17,7 @@ import { AccountAddress } from '@/components/wallet/AccountAddress';
 import { PortfolioSummary } from '@/components/wallet/PortfolioSummary';
 import { AssetList } from '@/components/wallet/AssetList';
 import { WithdrawDialog } from '@/components/WithdrawDialog';
+import { DepositButton } from '@/components/wallet/DepositButton';
 
 export const ConnectButton = () => {
   const { login, logout, authenticated, ready } = usePrivy();
@@ -143,6 +147,7 @@ export const ConnectButton = () => {
           </div>
         </DialogContent>
       </Dialog>
+      <DepositButton />
 
       {/* Quick Withdraw Button */}
       <Button
@@ -154,7 +159,6 @@ export const ConnectButton = () => {
       >
         <ArrowUpRight className="h-4 w-4" />
       </Button>
-
       {/* Withdraw Dialog */}
       <WithdrawDialog open={withdrawOpen} onOpenChange={setWithdrawOpen} />
     </div>

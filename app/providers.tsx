@@ -30,11 +30,15 @@ export const Providers = ({ children }: ProvidersProps) => (
               theme: 'dark',
               accentColor: '#fa9e39',
             },
-            // fundingMethodConfig: {
-            //   moonpay: {
-            //     useSandbox: true,
-            //   },
-            // },
+            fundingMethodConfig: {
+              moonpay: {
+                useSandbox: true,
+                uiConfig: {
+                  theme: 'dark',
+                  accentColor: '#fa9e39',
+                },
+              },
+            },
           }}
         >
           <PredictedAddressProvider>{children}</PredictedAddressProvider>

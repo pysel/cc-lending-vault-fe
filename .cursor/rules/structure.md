@@ -46,11 +46,13 @@
 │   ├── TokenVaultCard.tsx
 │   ├── VaultDashboard.tsx
 │   ├── Vaults.tsx
+│   ├── WithdrawDialog.tsx
 │   ├── ui
 │   │   ├── alert.tsx
 │   │   ├── badge.tsx
 │   │   ├── button.tsx
 │   │   ├── card.tsx
+│   │   ├── chain-select.tsx
 │   │   ├── dialog.tsx
 │   │   ├── dropdown-menu.tsx
 │   │   ├── input.tsx
@@ -91,15 +93,18 @@
 │   │   ├── useDepositQuotes.ts
 │   │   ├── useEmbeddedWallet.ts
 │   │   ├── useVaultData.ts
-│   │   └── useWithdraw.ts
+│   │   ├── useWithdraw.ts
+│   │   └── useWithdrawCustom.ts
 │   ├── types
 │   │   ├── assets.ts
 │   │   ├── balances.ts
 │   │   ├── bot.ts
 │   │   ├── chains.ts
 │   │   ├── quote.ts
-│   │   └── vault.ts
+│   │   ├── vault.ts
+│   │   └── withdraw.ts
 │   ├── utils
+│   │   ├── address.ts
 │   │   ├── chain.ts
 │   │   ├── conversions.ts
 │   │   ├── signer.ts
@@ -113,11 +118,11 @@
 ├── public
 │   ├── file.svg
 │   ├── globe.svg
+│   ├── logo.png
 │   ├── next.svg
-│   ├── og-image.png
 │   ├── vercel.svg
 │   └── window.svg
 └── tsconfig.json
 
-20 directories, 97 files
+20 directories, 102 files
 ```
