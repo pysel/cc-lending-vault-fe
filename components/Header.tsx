@@ -2,7 +2,6 @@
 
 import { ConnectButton } from '@/components/ConnectButton';
 import { ModeToggle } from '@/components/ModeToggle';
-import { BotHealthStatusComponent } from '@/components/BotHealthStatus';
 
 export const Header = () => {
   return (
@@ -12,8 +11,7 @@ export const Header = () => {
       </div>
 
       <div className="flex items-center gap-4">
-        {/* <BotHealthStatusComponent variant="compact" /> */}
-        <ModeToggle />
+        {/* <ModeToggle /> */}
         <div data-onboarding="connect-button">
           <ConnectButton />
         </div>
