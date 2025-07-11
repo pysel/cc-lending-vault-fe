@@ -22,20 +22,19 @@ export const Providers = ({ children }: ProvidersProps) => (
           appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ''}
           config={{
             embeddedWallets: {
-              // Create embedded wallets for users who don't have a wallet
               createOnLogin: 'users-without-wallets',
             },
             loginMethods: ['email', 'google', 'sms', 'passkey', 'wallet'],
             appearance: {
               theme: 'dark',
-              accentColor: '#fa9e39',
+              // accentColor: '#fa9e39',
             },
             fundingMethodConfig: {
               moonpay: {
                 useSandbox: true,
                 uiConfig: {
                   theme: 'dark',
-                  accentColor: '#fa9e39',
+                  // accentColor: '#fa9e39',
                 },
               },
             },
